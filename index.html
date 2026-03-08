@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salary & IT Statement Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#1a2744; --navy2:#243460; --gold:#c8973a; --goldf:#e8b85a;
+  --cream:#faf7f2; --white:#fff; --border:#e2ddd5; --muted:#7a8aaa;
+  --green:#2e7d52; --gbg:#edf7f1; --red:#c0392b; --rbg:#fdf0ee;
+  --bbg:#eef3fb; --shadow:0 4px 24px rgba(26,39,68,.10);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--navy);min-height:100vh}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--navy);color:#fff;height:58px;display:flex;align-items:center;
+  justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 12px rgba(0,0,0,.25)}
+.topbar-left{display:flex;align-items:center;gap:14px}
+.topbar-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:700}
+.pill{font-size:11px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+  color:rgba(255,255,255,.7);padding:3px 10px;border-radius:20px}
+.topbar-right{display:flex;gap:8px}
+.btn{padding:7px 15px;border-radius:8px;font-size:12px;font-weight:600;
+  font-family:'DM Sans',sans-serif;cursor:pointer;border:none;transition:.15s}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-gold:hover{background:var(--goldf)}
+.btn-ghost{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.btn-ghost:hover{background:rgba(255,255,255,.18)}
+.btn-navy{background:var(--navy);color:#fff;border:1.5px solid var(--border)}
+
+/* ── LOGIN ── */
+#login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:var(--navy);position:relative;overflow:hidden}
+#login-page::before{content:'';position:absolute;width:600px;height:600px;
+  background:radial-gradient(circle,rgba(200,151,58,.15) 0%,transparent 70%);
+  top:-80px;right:-80px;border-radius:50%}
+#login-page::after{content:'';position:absolute;width:400px;height:400px;
+  background:radial-gradient(circle,rgba(200,151,58,.08) 0%,transparent 70%);
+  bottom:-60px;left:-60px;border-radius:50%}
+.login-card{background:#fff;border-radius:20px;padding:44px 40px;width:420px;
+  max-width:95vw;box-shadow:0 40px 80px rgba(0,0,0,.35);position:relative;z-index:1;
+  animation:fadeUp .45s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.login-icon{font-size:36px;margin-bottom:18px}
+.login-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;
+  color:var(--navy);margin-bottom:5px}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:32px;line-height:1.5}
+.lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.08em;margin-bottom:7px}
+.fw{margin-bottom:18px}
+.inp{width:100%;padding:12px 15px;border:1.5px solid var(--border);border-radius:10px;
+  font-size:14px;font-family:'DM Sans',sans-serif;color:var(--navy);background:var(--cream);
+  outline:none;transition:.2s}
+.inp:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(26,39,68,.08);background:#fff}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--navy),var(--navy2));
+  color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;
+  font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:6px;
+  transition:.15s;letter-spacing:.02em}
+.login-btn:hover{box-shadow:0 8px 20px rgba(26,39,68,.3);transform:translateY(-1px)}
+.err{background:var(--rbg);color:var(--red);border:1px solid #f5c6c3;border-radius:8px;
+  padding:9px 13px;font-size:12px;margin-top:12px;display:none}
+.login-note{font-size:11px;color:var(--muted);text-align:center;margin-top:18px;line-height:1.7}
+
+/* ── DASHBOARD ── */
+#dash-page{display:none}
+.body{max-width:920px;margin:0 auto;padding:28px 18px 60px}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:16px;
+  padding:26px 28px;color:#fff;display:flex;align-items:center;gap:18px;
+  margin-bottom:22px;flex-wrap:wrap}
+.avatar{width:56px;height:56px;background:rgba(200,151,58,.25);border:2px solid var(--gold);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:700;color:var(--goldf);font-family:'Playfair Display',serif;flex-shrink:0}
+.hero-info{flex:1}
+.hero-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:5px}
+.hero-tags{display:flex;gap:12px;flex-wrap:wrap}
+.htag{font-size:12px;color:rgba(255,255,255,.65)}
+.htag strong{color:rgba(255,255,255,.9)}
+.hero-right{text-align:right}
+.period-lbl{font-size:10px;color:rgba(255,255,255,.45);margin-bottom:2px}
+.period-val{font-size:12px;color:var(--goldf);font-weight:600}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;background:#fff;border-radius:12px;padding:5px;
+  border:1px solid var(--border);margin-bottom:22px;box-shadow:var(--shadow)}
+.tab{flex:1;padding:9px 6px;border-radius:8px;font-size:13px;font-weight:500;
+  cursor:pointer;border:none;background:transparent;color:var(--muted);
+  font-family:'DM Sans',sans-serif;transition:.2s;text-align:center}
+.tab.active{background:var(--navy);color:#fff;font-weight:600}
+
+/* Cards */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid1{margin-bottom:16px}
+@media(max-width:600px){.grid2{grid-template-columns:1fr}}
+.card{background:#fff;border-radius:14px;padding:22px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.card-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:7px}
+.card-title span{width:6px;height:6px;border-radius:50%;background:var(--gold);display:inline-block}
+.row{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid #f0ece6;font-size:13.5px}
+.row:last-child{border-bottom:none}
+.rl{color:#5a6a8a}.rv{font-weight:600;color:var(--navy)}
+.total-row{background:var(--bbg);border-radius:8px;padding:10px 14px;
+  display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.total-row .tl{font-size:13px;font-weight:600;color:var(--navy)}
+.total-row .tv{font-size:17px;font-weight:700;color:var(--navy)}
+
+/* Tax boxes */
+.tax-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:480px){.tax-grid{grid-template-columns:1fr}}
+.tax-box{border-radius:10px;padding:16px;text-align:center}
+.tax-box.new{background:var(--gbg);border:1.5px solid #b7e4cb}
+.tax-box.old{background:var(--rbg);border:1.5px solid #f5c6c3}
+.regime-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.new .regime-lbl{color:var(--green)}.old .regime-lbl{color:var(--red)}
+.tax-amt{font-size:24px;font-weight:700;font-family:'Playfair Display',serif}
+.new .tax-amt{color:var(--green)}.old .tax-amt{color:var(--red)}
+.tax-note{font-size:11px;color:var(--muted);margin-top:3px}
+.save-banner{background:linear-gradient(135deg,#1a5c38,#2e7d52);color:#fff;
+  border-radius:10px;padding:13px 16px;display:flex;align-items:center;
+  justify-content:space-between;gap:10px}
+.save-lbl{font-size:12px;opacity:.85}.save-amt{font-size:19px;font-weight:700;color:#7fffc4}
+.per-month-row{background:#f8f5ff;border:1px solid #d5c8f5;border-radius:8px;
+  padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.per-month-row .tl{font-size:12px;color:#6b4fb0;font-weight:600}
+.per-month-row .tv{font-size:15px;font-weight:700;color:#5a3ea0}
+
+/* Bonus */
+.bonus-card{background:linear-gradient(135deg,#fffbf0,#fef3d6);border:1.5px solid #f0d080;
+  border-radius:14px;padding:20px 22px;display:flex;align-items:center;
+  justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap;box-shadow:var(--shadow)}
+.bonus-left{display:flex;align-items:center;gap:12px}
+.bonus-icon{font-size:32px}
+.bonus-title{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:2px}
+.bonus-sub{font-size:11px;color:var(--muted)}
+.bonus-amt{font-size:26px;font-weight:700;color:var(--gold);font-family:'Playfair Display',serif}
+
+/* GPF */
+.gpf-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:500px){.gpf-summary{grid-template-columns:1fr 1fr}}
+.gpf-stat{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.gpf-stat .gs-lbl{font-size:11px;color:var(--muted);margin-bottom:5px}
+.gpf-stat .gs-val{font-size:18px;font-weight:700;color:var(--navy);font-family:'Playfair Display',serif}
+.gpf-stat .gs-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.month-table{width:100%;border-collapse:collapse;font-size:13px}
+.month-table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:500}
+.month-table td{padding:9px 12px;border-bottom:1px solid #f0ece6}
+.month-table tr:last-child td{border-bottom:none}
+.month-table tr:nth-child(even) td{background:#f8f6f2}
+.month-table .amt{text-align:right;font-weight:600;color:var(--navy)}
+.gpf-80c-note{background:#fff8e1;border:1px solid #ffe082;border-radius:8px;
+  padding:11px 14px;font-size:12px;color:#7a5c00;margin-top:12px;line-height:1.6}
+
+/* ── EDIT REQUEST SECTION ── */
+.edit-section{background:#fff;border-radius:14px;padding:24px;border:1px solid var(--border);
+  box-shadow:var(--shadow);margin-bottom:16px}
+.edit-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--navy);
+  margin-bottom:6px;font-weight:600}
+.edit-sub{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:500px){.edit-grid{grid-template-columns:1fr}}
+.edit-field{display:flex;flex-direction:column;gap:6px}
+.edit-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.edit-inp{padding:10px 13px;border:1.5px solid var(--border);border-radius:9px;
+  font-size:14px;font-family:'DM Sans',sans-serif;color:var(--navy);outline:none;transition:.2s}
+.edit-inp:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(26,39,68,.07)}
+.edit-hint{font-size:10px;color:var(--muted);margin-top:2px}
+.edit-note-area{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:9px;
+  font-size:13px;font-family:'DM Sans',sans-serif;color:var(--navy);outline:none;
+  resize:vertical;min-height:72px;transition:.2s}
+.edit-note-area:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(26,39,68,.07)}
+.submit-btn{margin-top:16px;padding:12px 28px;background:linear-gradient(135deg,var(--navy),var(--navy2));
+  color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;
+  font-family:'DM Sans',sans-serif;cursor:pointer;transition:.15s}
+.submit-btn:hover{box-shadow:0 6px 18px rgba(26,39,68,.25);transform:translateY(-1px)}
+.success-msg{background:var(--gbg);color:var(--green);border:1px solid #b7e4cb;
+  border-radius:8px;padding:11px 14px;font-size:13px;margin-top:14px;display:none}
+.requests-history{margin-top:20px}
+.req-item{background:var(--bbg);border:1px solid #c8d8f0;border-radius:10px;
+  padding:14px;margin-bottom:10px;font-size:13px}
+.req-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.req-date{font-size:11px;color:var(--muted)}
+.req-badge{font-size:10px;padding:3px 9px;border-radius:20px;font-weight:600}
+.req-badge.pending{background:#fff3cd;color:#7a5c00}
+.req-badge.seen{background:var(--gbg);color:var(--green)}
+.req-row{display:flex;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.req-chip{background:#fff;border:1px solid var(--border);border-radius:6px;
+  padding:4px 10px;font-size:12px;color:var(--navy)}
+.req-note{font-size:12px;color:var(--muted);margin-top:6px;font-style:italic}
+.no-req{font-size:13px;color:var(--muted);text-align:center;padding:20px}
+
+/* Disclaimer */
+.disc{text-align:center;font-size:11px;color:var(--muted);margin-top:28px;
+  border-top:1px solid var(--border);padding-top:18px;line-height:1.8}
+
+/* Print */
+@media print{
+  .topbar .btn,.tabs,.edit-section{display:none!important}
+  .topbar{position:static}
+  body{background:#fff}
+  .card,.bonus-card{box-shadow:none;border:1px solid #ddd}
+}
+
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════
+     LOGIN
+════════════════════════════════ -->
+<div id="login-page">
+  <div class="login-card">
+    <div class="login-icon">🏛️</div>
+    <div class="login-title">Salary Statement Portal</div>
+    <div class="login-sub">Income Tax & GPF Statement — FY 2026–27<br>Login with your PAN and Date of Birth</div>
+
+    <div class="fw">
+      <div class="lbl">PAN Card Number</div>
+      <input class="inp" id="pan" type="text" maxlength="10" placeholder="e.g. ABCPK1234D"
+        autocomplete="off" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="fw">
+      <div class="lbl">Date of Birth</div>
+      <input class="inp" id="dob" type="date">
+    </div>
+    <div class="fw" id="url-field">
+      <div class="lbl">Google Sheet CSV URL <span style="color:var(--gold);font-size:10px">(Admin pastes once)</span></div>
+      <input class="inp" id="sheet-url" type="text" placeholder="https://docs.google.com/spreadsheets/d/…/pub?…output=csv">
+    </div>
+
+    <button class="login-btn" onclick="doLogin()" id="login-btn">View My Statement</button>
+    <div class="err" id="err"></div>
+    <div class="login-note">🔒 Credentials matched locally — your data is private<br>Only your row is shown after successful login</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     DASHBOARD
+════════════════════════════════ -->
+<div id="dash-page">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">🏛️ Salary Portal</div>
+      <div class="pill">FY 2026–27</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-gold" onclick="window.print()">🖨 Print</button>
+      <button class="btn btn-ghost" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="body">
+    <!-- Hero -->
+    <div class="hero" id="hero"></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="showTab(0,this)">💰 Salary</button>
+      <button class="tab" onclick="showTab(1,this)">📊 Income Tax</button>
+      <button class="tab" onclick="showTab(2,this)">🏦 GPF</button>
+      <button class="tab" onclick="showTab(3,this)">✏️ Update Request</button>
+    </div>
+
+    <!-- Tab 0: Salary -->
+    <div id="tab0">
+      <div id="bonus-section"></div>
+      <div class="grid2" id="salary-cards"></div>
+    </div>
+
+    <!-- Tab 1: IT -->
+    <div id="tab1" style="display:none">
+      <div id="it-cards"></div>
+    </div>
+
+    <!-- Tab 2: GPF -->
+    <div id="tab2" style="display:none">
+      <div id="gpf-cards"></div>
+    </div>
+
+    <!-- Tab 3: Edit Request -->
+    <div id="tab3" style="display:none">
+      <div class="edit-section">
+        <div class="edit-title">✏️ Submit Correction Request</div>
+        <div class="edit-sub">
+          If you notice any discrepancy in your GPF deduction or Income Tax figures, you can submit a correction request here.
+          <strong>This will NOT change the original records</strong> — it creates a request for the Accounts/DDO office to review.
+        </div>
+
+        <div class="edit-grid">
+          <div class="edit-field">
+            <div class="edit-lbl">GPF Monthly Deduction (if different)</div>
+            <input class="edit-inp" id="req-gpf" type="number" placeholder="e.g. 28000">
+            <div class="edit-hint">Leave blank if no change needed</div>
+          </div>
+          <div class="edit-field">
+            <div class="edit-lbl">Income Tax per Month (without cess)</div>
+            <input class="edit-inp" id="req-it" type="number" placeholder="e.g. 18500">
+            <div class="edit-hint">Without cess — only if you have a different figure</div>
+          </div>
+          <div class="edit-field" style="grid-column:1/-1">
+            <div class="edit-lbl">Reason / Remarks</div>
+            <textarea class="edit-note-area" id="req-note" placeholder="Explain the discrepancy — e.g. GPF increased from April, NPS deduction not accounted, etc."></textarea>
+          </div>
+        </div>
+
+        <button class="submit-btn" onclick="submitRequest()">Submit Request</button>
+        <div class="success-msg" id="success-msg">
+          ✅ Your request has been saved successfully. The DDO office will review it and update records accordingly.
+        </div>
+      </div>
+
+      <!-- Previous requests -->
+      <div class="edit-section">
+        <div class="edit-title">📋 Your Previous Requests</div>
+        <div id="prev-requests"><div class="no-req">No previous requests found.</div></div>
+      </div>
+    </div>
+
+    <div class="disc">
+      This statement is auto-generated for the period March 2026 – February 2027.<br>
+      All figures are indicative. For discrepancies, use the Update Request tab.<br>
+      Generated on <span id="gen-date"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIGURATION
+// ══════════════════════════════════════════════════════
+
+// ⬇ ADMIN: Hardcode your Google Sheets published CSV URLs here
+// Leave empty "" to show the URL input field on login screen
+const IT_SHEET_URL   = "";   // IncomeTax sheet CSV URL
+const GPF_SHEET_URL  = "";   // GPF sheet CSV URL (separate publish link)
+
+// For employee change requests — using localStorage (browser-based, private to device)
+// To use a shared backend, replace saveRequest/loadRequests with a fetch() to your server
+const STORAGE_KEY = "salary_portal_requests";
+
+const DIWALI_BONUS = 6908;
+
+// ══════════════════════════════════════════════════════
+// COLUMN MAP (0-indexed after CSV parse)
+// IncomeTax sheet
+// ══════════════════════════════════════════════════════
+const IT = {
+  sno:0,paypin:1,name:2,desig:3,level:4,curBasic:5,incrMon:6,
+  nextBasic:7,monCur:8,monNext:9,totBasic:10,totDA:11,totHRA:12,
+  totTPT:13,disabled:14,gross:15,itNew:16,addDed:17,itOld:18,
+  diff:19,itPerMonWithCess:20,itPerMon:21,cess:22,pan:23,dob:24
+};
+// GPF sheet
+const GP = {
+  sno:0,name:1,pan:2,dob:3,desig:4,
+  months:[5,6,7,8,9,10,11,12,13,14,15,16,17] // Feb26–Feb27
+};
+const MONTH_LABELS = ["Feb 2026","Mar 2026","Apr 2026","May 2026","Jun 2026",
+  "Jul 2026","Aug 2026","Sep 2026","Oct 2026","Nov 2026","Dec 2026","Jan 2027","Feb 2027"];
+
+let EMP = null; // IncomeTax row
+let GPF_EMP = null; // GPF row
+
+// ══════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════
+function fmtINR(n){
+  if(n===null||n===undefined||isNaN(n)||n==="")return "—";
+  n=Math.round(Number(n));
+  if(n===0)return "₹0";
+  let sign=n<0?"-":""; n=Math.abs(n);
+  let s=n.toString(), res="";
+  if(s.length>3){res=","+s.slice(-3);s=s.slice(0,-3);
+    while(s.length>2){res=","+s.slice(-2)+res;s=s.slice(0,-2)}
+    res=s+res}else res=s;
+  return "₹"+sign+res;
+}
+function n(v){return Number(v)||0}
+function showTab(i,el){
+  [0,1,2,3].forEach(j=>{
+    document.getElementById("tab"+j).style.display=j===i?"block":"none"});
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  el.classList.add("active");
+  if(i===3) loadRequests();
+}
+function dobToDisplay(dob){
+  const s=String(dob).padStart(8,"0");
+  return s.slice(0,2)+"/"+s.slice(2,4)+"/"+s.slice(4);
+}
+
+// ══════════════════════════════════════════════════════
+// CSV PARSER
+// ══════════════════════════════════════════════════════
+function parseCSV(txt){
+  return txt.trim().split("\n").map(line=>{
+    const r=[];let cur="",inQ=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){inQ=!inQ}
+      else if(c===','&&!inQ){r.push(cur.trim());cur=""}
+      else{cur+=c}
+    }
+    r.push(cur.trim());return r;
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════════════
+async function doLogin(){
+  const pan = document.getElementById("pan").value.trim().toUpperCase();
+  const dobRaw = document.getElementById("dob").value; // YYYY-MM-DD
+  const [y,m,d] = dobRaw.split("-");
+  const dob = d+m+y; // DDMMYYYY
+
+  if(pan.length!==10){showErr("Enter a valid 10-character PAN.");return}
+  if(!dobRaw){showErr("Please select your Date of Birth.");return}
+
+  let itURL  = IT_SHEET_URL  || document.getElementById("sheet-url")?.value.trim();
+  if(!itURL){showErr("Please enter the Google Sheets CSV URL.");return}
+
+  const btn=document.getElementById("login-btn");
+  btn.innerHTML='<span class="spinner"></span> Verifying…';
+  btn.disabled=true;
+  document.getElementById("err").style.display="none";
+
+  try{
+    // Fetch IncomeTax sheet
+    const r1=await fetch(itURL);
+    if(!r1.ok)throw new Error("Cannot reach sheet");
+    const csv1=await r1.text();
+    const rows1=parseCSV(csv1).filter(r=>r[IT.sno]&&!isNaN(Number(r[IT.sno])));
+
+    const emp=rows1.find(r=>
+      (r[IT.pan]||"").trim().toUpperCase()===pan &&
+      String(r[IT.dob]||"").trim()===dob
+    );
+    if(!emp){showErr("PAN or Date of Birth does not match our records.");btn.innerHTML="View My Statement";btn.disabled=false;return}
+
+    EMP=emp;
+
+    // Try GPF sheet (same CSV or second URL — we'll try GPF as separate sheet URL)
+    // Since both sheets need separate publish URLs, we'll try to load GPF from same workbook
+    // Strategy: replace "gid=0" with GPF sheet gid, or user provides second URL
+    // For now, we fetch GPF from same base URL but with gid parameter
+    // We'll handle gracefully if not found
+    try{
+      const gpfURL = buildGPFUrl(itURL);
+      const r2=await fetch(gpfURL);
+      if(r2.ok){
+        const csv2=await r2.text();
+        const rows2=parseCSV(csv2).filter(r=>r[GP.sno]&&!isNaN(Number(r[GP.sno])));
+        GPF_EMP=rows2.find(r=>
+          (r[GP.pan]||"").trim().toUpperCase()===pan &&
+          String(r[GP.dob]||"").trim()===dob
+        );
+      }
+    }catch(e){GPF_EMP=null;}
+
+    renderDash(EMP, GPF_EMP);
+    document.getElementById("login-page").style.display="none";
+    document.getElementById("dash-page").style.display="block";
+    window.scrollTo(0,0);
+
+  }catch(e){
+    showErr("Could not load data. Check the URL or internet connection.");
+    console.error(e);
+  }
+  btn.innerHTML="View My Statement";btn.disabled=false;
+}
+
+function buildGPFUrl(itURL){
+  // Try to swap gid param to load GPF sheet
+  // Google Sheets publish URL format: …/pub?gid=XXXXXXX&single=true&output=csv
+  // GPF sheet gid needs to be known — for now return modified URL
+  // User can also hardcode GPF_SHEET_URL at top
+  if(GPF_SHEET_URL) return GPF_SHEET_URL;
+  // Attempt: replace gid value or append different sheet indicator
+  return itURL.replace(/gid=\d+/,"gid=GPF_GID_HERE");
+}
+
+function showErr(msg){
+  const e=document.getElementById("err");
+  e.textContent="❌ "+msg;e.style.display="block";
+}
+function logout(){
+  EMP=null;GPF_EMP=null;
+  document.getElementById("dash-page").style.display="none";
+  document.getElementById("login-page").style.display="flex";
+  document.getElementById("pan").value="";
+  document.getElementById("dob").value="";
+  document.getElementById("err").style.display="none";
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════
+function renderDash(e, g){
+  document.getElementById("gen-date").textContent=
+    new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"});
+
+  const name   = e[IT.name]||g?.[GP.name]||"Employee";
+  const desig  = e[IT.desig]||"";
+  const level  = e[IT.level]||"";
+  const paypin = e[IT.paypin]||"";
+  const initials=(name.split(" ").map(w=>w[0]||"").join("").slice(0,2)||desig.slice(0,2)).toUpperCase();
+
+  // Hero
+  document.getElementById("hero").innerHTML=`
+    <div class="avatar">${initials}</div>
+    <div class="hero-info">
+      <div class="hero-name">${name}</div>
+      <div class="hero-tags">
+        <div class="htag">📋 <strong>${desig}</strong></div>
+        <div class="htag">🎯 Level <strong>${level}</strong></div>
+        <div class="htag">🆔 <strong>${paypin}</strong></div>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="period-lbl">Statement Period</div>
+      <div class="period-val">Mar 2026 – Feb 2027</div>
+    </div>`;
+
+  // ── TAB 0: Salary ────────────────────────────────
+  const curBasic=n(e[IT.curBasic]),nextBasic=n(e[IT.nextBasic]);
+  const incrMon=e[IT.incrMon]||"";
+  const monCur=n(e[IT.monCur]),monNext=n(e[IT.monNext]);
+  const totBasic=n(e[IT.totBasic]),totDA=n(e[IT.totDA]);
+  const totHRA=n(e[IT.totHRA]),totTPT=n(e[IT.totTPT]),gross=n(e[IT.gross]);
+  const lvl=Number(level);
+
+  document.getElementById("bonus-section").innerHTML=`
+    <div class="bonus-card">
+      <div class="bonus-left">
+        <div class="bonus-icon">🪔</div>
+        <div>
+          <div class="bonus-title">Diwali / Ad-hoc Bonus (2024-25)</div>
+          <div class="bonus-sub">Non-PLB · Group B/C Non-Gazetted · 30 days @ ₹7,000 ceiling</div>
+        </div>
+      </div>
+      <div class="bonus-amt">${fmtINR(DIWALI_BONUS)}</div>
+    </div>`;
+
+  document.getElementById("salary-cards").innerHTML=`
+    <div class="card">
+      <div class="card-title"><span></span>Annual Earnings Breakup</div>
+      <div class="row"><div class="rl">Total Basic Pay</div><div class="rv">${fmtINR(totBasic)}</div></div>
+      <div class="row"><div class="rl">Dearness Allowance (DA)</div><div class="rv">${fmtINR(totDA)}</div></div>
+      <div class="row"><div class="rl">House Rent Allowance (HRA)</div><div class="rv">${fmtINR(totHRA)}</div></div>
+      <div class="row"><div class="rl">Transport Allowance (TPT+DA)</div><div class="rv">${fmtINR(totTPT)}</div></div>
+      <div class="total-row"><div class="tl">💰 Annual Gross Salary</div><div class="tv">${fmtINR(gross)}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span></span>Increment Details</div>
+      <div style="display:flex;align-items:center;gap:10px;margin:4px 0 16px;flex-wrap:wrap">
+        <div style="flex:1;background:var(--bbg);border-radius:9px;padding:12px;text-align:center;min-width:90px">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:3px">Current Basic</div>
+          <div style="font-size:16px;font-weight:700;color:var(--navy)">${fmtINR(curBasic)}<span style="font-size:10px;font-weight:400">/mo</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="font-size:18px;color:var(--gold)">→</div>
+          <div style="font-size:10px;font-weight:600;color:var(--gold);background:#fef3e0;border-radius:20px;padding:3px 9px;white-space:nowrap">📅 ${incrMon}</div>
+        </div>
+        <div style="flex:1;background:var(--gbg);border-radius:9px;padding:12px;text-align:center;min-width:90px">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:3px">After Increment</div>
+          <div style="font-size:16px;font-weight:700;color:var(--green)">${fmtINR(nextBasic)}<span style="font-size:10px;font-weight:400">/mo</span></div>
+        </div>
+      </div>
+      <div class="row"><div class="rl">Months at Current Basic</div><div class="rv">${monCur} months</div></div>
+      <div class="row"><div class="rl">Months at Incremented Basic</div><div class="rv">${monNext} months</div></div>
+      <div class="row"><div class="rl">Annual Increment Gain</div><div class="rv" style="color:var(--green)">+${fmtINR((nextBasic-curBasic)*12)}/yr</div></div>
+      <div class="row"><div class="rl">TPT Rate (Level ${level})</div><div class="rv">${lvl<=2?"₹1,350":lvl<=8?"₹3,600":"₹7,200"}/mo</div></div>
+    </div>`;
+
+  // ── TAB 1: IT ────────────────────────────────────
+  const itNew=n(e[IT.itNew]),itOld=n(e[IT.itOld]),diff=n(e[IT.diff]);
+  const itPerMon=n(e[IT.itPerMonWithCess]),itPerMonNoCess=n(e[IT.itPerMon]),cess=n(e[IT.cess]);
+  const addDed=n(e[IT.addDed]);
+
+  document.getElementById("it-cards").innerHTML=`
+    <div class="card grid1">
+      <div class="card-title"><span></span>Income Tax Comparison — FY 2025-26</div>
+      <div class="tax-grid">
+        <div class="tax-box new">
+          <div class="regime-lbl">✅ New Regime</div>
+          <div class="tax-amt">${fmtINR(itNew)}</div>
+          <div class="tax-note">Std. Ded. ₹75,000 · No 80C</div>
+          ${itNew===0?'<div class="tax-note" style="color:var(--green);font-weight:600;margin-top:4px">🎉 Full 87A Rebate!</div>':""}
+        </div>
+        <div class="tax-box old">
+          <div class="regime-lbl">🔴 Old Regime</div>
+          <div class="tax-amt">${fmtINR(itOld)}</div>
+          <div class="tax-note">Std. Ded. ₹50,000 + 80C ₹1,50,000${addDed?` + ₹${addDed.toLocaleString()} extra`:""}</div>
+        </div>
+      </div>
+      ${diff>0?`
+      <div class="save-banner">
+        <div><div class="save-lbl">💡 New Regime saves you this year</div>
+        <div style="font-size:10px;opacity:.7;margin-top:2px">Recommended regime for you</div></div>
+        <div class="save-amt">${fmtINR(diff)}</div>
+      </div>`:diff<0?`
+      <div class="save-banner" style="background:linear-gradient(135deg,#7b1a1a,#a02020)">
+        <div><div class="save-lbl">💡 Old Regime saves you more</div></div>
+        <div class="save-amt">${fmtINR(Math.abs(diff))}</div>
+      </div>`:`
+      <div class="save-banner" style="background:linear-gradient(135deg,#555,#666)">
+        <div class="save-lbl">Both regimes result in equal tax</div>
+      </div>`}
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title"><span></span>Monthly TDS Deduction</div>
+        <div class="row"><div class="rl">IT per Month (without Cess)</div><div class="rv">${fmtINR(itPerMonNoCess)}</div></div>
+        <div class="row"><div class="rl">Health & Education Cess (4%)</div><div class="rv">${fmtINR(cess)}</div></div>
+        <div class="per-month-row">
+          <div class="tl">📅 Monthly TDS (with Cess)</div>
+          <div class="tv">${fmtINR(itPerMon)}</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span></span>Deductions Considered</div>
+        <div class="row"><div class="rl">Standard Deduction (New)</div><div class="rv">₹75,000</div></div>
+        <div class="row"><div class="rl">Standard Deduction (Old)</div><div class="rv">₹50,000</div></div>
+        <div class="row"><div class="rl">80C Deduction (Old)</div><div class="rv">₹1,50,000</div></div>
+        ${addDed?`<div class="row"><div class="rl">Additional Deduction (Old)</div><div class="rv">${fmtINR(addDed)}</div></div>`:""}
+        <div class="row"><div class="rl">87A Rebate Limit (New)</div><div class="rv">₹12,00,000</div></div>
+        <div class="row"><div class="rl">Cess</div><div class="rv">4%</div></div>
+      </div>
+    </div>`;
+
+  // ── TAB 2: GPF ───────────────────────────────────
+  renderGPF(g, itOld);
+}
+
+function renderGPF(g, itOld){
+  const container=document.getElementById("gpf-cards");
+  if(!g){
+    container.innerHTML=`<div class="card"><div style="text-align:center;padding:30px;color:var(--muted)">
+      GPF data not available.<br><small>Please ensure GPF sheet URL is configured.</small>
+    </div></div>`;
+    return;
+  }
+
+  const monthly = GP.months.map(c=>n(g[c]));
+  const total   = monthly.reduce((a,b)=>a+b,0);
+  const avgMon  = Math.round(total/monthly.length);
+  const u80c    = Math.min(total,150000);
+
+  // How GPF fits in 80C
+  const gpf80cPct = Math.min(100,Math.round(total/150000*100));
+
+  let monthRows="";
+  MONTH_LABELS.forEach((lbl,i)=>{
+    monthRows+=`<tr>
+      <td>${lbl}</td>
+      <td class="amt">${fmtINR(monthly[i])}</td>
+    </tr>`;
+  });
+
+  container.innerHTML=`
+    <div class="gpf-summary">
+      <div class="gpf-stat">
+        <div class="gs-lbl">Annual GPF Deduction</div>
+        <div class="gs-val">${fmtINR(total)}</div>
+        <div class="gs-sub">FY 2026–27</div>
+      </div>
+      <div class="gpf-stat">
+        <div class="gs-lbl">Monthly Average</div>
+        <div class="gs-val">${fmtINR(avgMon)}</div>
+        <div class="gs-sub">per month</div>
+      </div>
+      <div class="gpf-stat">
+        <div class="gs-lbl">80C Eligible</div>
+        <div class="gs-val">${fmtINR(u80c)}</div>
+        <div class="gs-sub">of ₹1,50,000 limit</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span></span>Month-wise GPF Deductions</div>
+      <table class="month-table">
+        <thead><tr><th>Month</th><th style="text-align:right">Deduction</th></tr></thead>
+        <tbody>${monthRows}</tbody>
+        <tfoot>
+          <tr style="background:var(--navy);color:#fff">
+            <td style="padding:9px 12px;font-weight:600">Total</td>
+            <td style="padding:9px 12px;text-align:right;font-weight:700">${fmtINR(total)}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="gpf-80c-note">
+        📌 <strong>80C Note:</strong> Your annual GPF contribution of ${fmtINR(total)} 
+        ${total>=150000
+          ? "fully exhausts the ₹1,50,000 Section 80C limit — maximum deduction claimed under Old Regime."
+          : `covers ${gpf80cPct}% of the ₹1,50,000 80C limit (₹${(150000-total).toLocaleString()} remaining for LIC/PPF/tuition fees etc.).`
+        }
+        <br>Note: GPF deduction has <strong>no benefit under New Regime</strong>.
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+// EDIT REQUESTS — stored in localStorage per device
+// (Replace with API call to Google Forms / Firebase for cross-device)
+// ══════════════════════════════════════════════════════
+function getStorageKey(){
+  const pan=EMP?EMP[IT.pan]:"";
+  const dob=EMP?EMP[IT.dob]:"";
+  return STORAGE_KEY+"_"+pan+"_"+dob;
+}
+
+function submitRequest(){
+  const gpfVal = document.getElementById("req-gpf").value.trim();
+  const itVal  = document.getElementById("req-it").value.trim();
+  const note   = document.getElementById("req-note").value.trim();
+
+  if(!gpfVal&&!itVal&&!note){
+    alert("Please enter at least one field before submitting.");return;
+  }
+
+  const req={
+    id: Date.now(),
+    date: new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}),
+    pan: EMP[IT.pan],
+    name: EMP[IT.name]||EMP[IT.desig]||"Employee",
+    desig: EMP[IT.desig],
+    gpf: gpfVal||null,
+    it: itVal||null,
+    note: note||null,
+    status:"pending"
+  };
+
+  const key=getStorageKey();
+  const existing=JSON.parse(localStorage.getItem(key)||"[]");
+  existing.unshift(req);
+  localStorage.setItem(key,JSON.stringify(existing));
+
+  // Clear fields
+  document.getElementById("req-gpf").value="";
+  document.getElementById("req-it").value="";
+  document.getElementById("req-note").value="";
+
+  document.getElementById("success-msg").style.display="block";
+  setTimeout(()=>document.getElementById("success-msg").style.display="none",4000);
+
+  loadRequests();
+}
+
+function loadRequests(){
+  const key=getStorageKey();
+  const reqs=JSON.parse(localStorage.getItem(key)||"[]");
+  const container=document.getElementById("prev-requests");
+  if(!reqs.length){
+    container.innerHTML=`<div class="no-req">No previous requests found.</div>`;return;
+  }
+  container.innerHTML=reqs.map(r=>`
+    <div class="req-item">
+      <div class="req-header">
+        <strong style="font-size:13px">${r.date}</strong>
+        <span class="req-badge ${r.status}">${r.status==="pending"?"⏳ Pending Review":"✅ Seen"}</span>
+      </div>
+      <div class="req-row">
+        ${r.gpf?`<div class="req-chip">🏦 GPF/month: ${fmtINR(r.gpf)}</div>`:""}
+        ${r.it?`<div class="req-chip">📊 IT/month: ${fmtINR(r.it)}</div>`:""}
+      </div>
+      ${r.note?`<div class="req-note">"${r.note}"</div>`:""}
+    </div>`).join("");
+}
+
+// ══════════════════════════════════════════════════════
+// SHOW/HIDE URL FIELD based on hardcoded URL
+// ══════════════════════════════════════════════════════
+window.onload=()=>{
+  if(IT_SHEET_URL) document.getElementById("url-field").style.display="none";
+  document.addEventListener("keydown",e=>{
+    if(e.key==="Enter"&&document.getElementById("login-page").style.display!=="none")doLogin();
+  });
+};
+</script>
+</body>
+</html>

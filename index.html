@@ -229,11 +229,40 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--navy);
     </div>
     <div class="fw">
       <div class="lbl">Date of Birth</div>
-      <input class="inp" id="dob" type="date">
+      <div style="display:flex;gap:8px;align-items:center">
+        <input class="inp" id="dob-dd" type="number" min="1" max="31" placeholder="DD"
+          style="width:72px;text-align:center" maxlength="2"
+          oninput="if(this.value.length==2)document.getElementById('dob-mm').focus()">
+        <span style="color:var(--muted);font-size:18px;flex-shrink:0">/</span>
+        <input class="inp" id="dob-mm" type="number" min="1" max="12" placeholder="MM"
+          style="width:72px;text-align:center" maxlength="2"
+          oninput="if(this.value.length==2)document.getElementById('dob-yyyy').focus()">
+        <span style="color:var(--muted);font-size:18px;flex-shrink:0">/</span>
+        <input class="inp" id="dob-yyyy" type="number" min="1940" max="2005" placeholder="YYYY"
+          style="flex:1;text-align:center" maxlength="4">
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:5px">Enter as Day / Month / Year — e.g. 15 / 08 / 1975</div>
     </div>
-    <div class="fw" id="url-field">
-      <div class="lbl">Google Sheet CSV URL <span style="color:var(--gold);font-size:10px">(Admin pastes once)</span></div>
-      <input class="inp" id="sheet-url" type="text" placeholder="https://docs.google.com/spreadsheets/d/…/pub?…output=csv">
+
+    <!-- Admin URL config — shown only if not saved yet -->
+    <div id="url-config-section">
+      <div style="background:#fff8e6;border:1px solid #f0d080;border-radius:10px;padding:14px;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;color:#7a5c00;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">
+          ⚙️ Admin Setup — Google Sheets URLs (saved once)
+        </div>
+        <div class="fw" style="margin-bottom:10px">
+          <div class="lbl">IncomeTax Sheet CSV URL</div>
+          <input class="inp" id="url-it" type="text" placeholder="…/pub?gid=XXXX&single=true&output=csv" style="font-size:12px">
+        </div>
+        <div class="fw" style="margin-bottom:10px">
+          <div class="lbl">GPF Sheet CSV URL</div>
+          <input class="inp" id="url-gpf" type="text" placeholder="…/pub?gid=YYYY&single=true&output=csv" style="font-size:12px">
+        </div>
+        <div style="font-size:11px;color:#7a5c00;line-height:1.6">
+          💡 These URLs are saved in your browser and won't be asked again.<br>
+          In Google Sheets: <em>File → Share → Publish to web → select sheet → CSV → Publish</em>
+        </div>
+      </div>
     </div>
 
     <button class="login-btn" onclick="doLogin()" id="login-btn">View My Statement</button>
@@ -417,15 +446,30 @@ function parseCSV(txt){
 // ══════════════════════════════════════════════════════
 async function doLogin(){
   const pan = document.getElementById("pan").value.trim().toUpperCase();
-  const dobRaw = document.getElementById("dob").value; // YYYY-MM-DD
-  const [y,m,d] = dobRaw.split("-");
-  const dob = d+m+y; // DDMMYYYY
 
-  if(pan.length!==10){showErr("Enter a valid 10-character PAN.");return}
-  if(!dobRaw){showErr("Please select your Date of Birth.");return}
+  // Build DOB from 3 separate fields → DDMMYYYY
+  const dd   = (document.getElementById("dob-dd").value||"").padStart(2,"0");
+  const mm   = (document.getElementById("dob-mm").value||"").padStart(2,"0");
+  const yyyy = document.getElementById("dob-yyyy").value||"";
+  const dob  = dd+mm+yyyy;
 
-  let itURL  = IT_SHEET_URL  || document.getElementById("sheet-url")?.value.trim();
-  if(!itURL){showErr("Please enter the Google Sheets CSV URL.");return}
+  if(pan.length!==10){showErr("Enter a valid 10-character PAN number.");return}
+  if(dd==="00"||mm==="00"||yyyy.length!==4){
+    showErr("Please enter a valid Date of Birth — Day, Month and Year all required.");return}
+
+  // URLs: hardcoded constants → input fields → localStorage (saved from previous session)
+  const itURLInput  = (document.getElementById("url-it")||{}).value||"";
+  const gpfURLInput = (document.getElementById("url-gpf")||{}).value||"";
+
+  let itURL  = IT_SHEET_URL  || itURLInput.trim()  || localStorage.getItem("portal_url_it")||"";
+  let gpfURL = GPF_SHEET_URL || gpfURLInput.trim() || localStorage.getItem("portal_url_gpf")||"";
+
+  if(!itURL) {showErr("Please enter the IncomeTax Sheet CSV URL.");return}
+  if(!gpfURL){showErr("Please enter the GPF Sheet CSV URL.");return}
+
+  // Persist URLs so they never need to be entered again
+  if(itURLInput.trim())  localStorage.setItem("portal_url_it",  itURL);
+  if(gpfURLInput.trim()) localStorage.setItem("portal_url_gpf", gpfURL);
 
   const btn=document.getElementById("login-btn");
   btn.innerHTML='<span class="spinner"></span> Verifying…';
@@ -433,37 +477,30 @@ async function doLogin(){
   document.getElementById("err").style.display="none";
 
   try{
-    // Fetch IncomeTax sheet
-    const r1=await fetch(itURL);
-    if(!r1.ok)throw new Error("Cannot reach sheet");
-    const csv1=await r1.text();
-    const rows1=parseCSV(csv1).filter(r=>r[IT.sno]&&!isNaN(Number(r[IT.sno])));
+    // Fetch both sheets in parallel
+    const [r1, r2] = await Promise.all([fetch(itURL), fetch(gpfURL)]);
+    if(!r1.ok) throw new Error("Cannot reach IncomeTax sheet");
+    if(!r2.ok) throw new Error("Cannot reach GPF sheet");
 
-    const emp=rows1.find(r=>
+    const [csv1, csv2] = await Promise.all([r1.text(), r2.text()]);
+
+    const rows1 = parseCSV(csv1).filter(r=>r[IT.sno]&&!isNaN(Number(r[IT.sno])));
+    const rows2 = parseCSV(csv2).filter(r=>r[GP.sno]&&!isNaN(Number(r[GP.sno])));
+
+    const emp = rows1.find(r=>
       (r[IT.pan]||"").trim().toUpperCase()===pan &&
       String(r[IT.dob]||"").trim()===dob
     );
-    if(!emp){showErr("PAN or Date of Birth does not match our records.");btn.innerHTML="View My Statement";btn.disabled=false;return}
+    if(!emp){
+      showErr("PAN or Date of Birth does not match our records. Please check and try again.");
+      btn.innerHTML="View My Statement";btn.disabled=false;return
+    }
 
-    EMP=emp;
-
-    // Try GPF sheet (same CSV or second URL — we'll try GPF as separate sheet URL)
-    // Since both sheets need separate publish URLs, we'll try to load GPF from same workbook
-    // Strategy: replace "gid=0" with GPF sheet gid, or user provides second URL
-    // For now, we fetch GPF from same base URL but with gid parameter
-    // We'll handle gracefully if not found
-    try{
-      const gpfURL = buildGPFUrl(itURL);
-      const r2=await fetch(gpfURL);
-      if(r2.ok){
-        const csv2=await r2.text();
-        const rows2=parseCSV(csv2).filter(r=>r[GP.sno]&&!isNaN(Number(r[GP.sno])));
-        GPF_EMP=rows2.find(r=>
-          (r[GP.pan]||"").trim().toUpperCase()===pan &&
-          String(r[GP.dob]||"").trim()===dob
-        );
-      }
-    }catch(e){GPF_EMP=null;}
+    EMP = emp;
+    GPF_EMP = rows2.find(r=>
+      (r[GP.pan]||"").trim().toUpperCase()===pan &&
+      String(r[GP.dob]||"").trim()===dob
+    ) || null;
 
     renderDash(EMP, GPF_EMP);
     document.getElementById("login-page").style.display="none";
@@ -471,21 +508,13 @@ async function doLogin(){
     window.scrollTo(0,0);
 
   }catch(e){
-    showErr("Could not load data. Check the URL or internet connection.");
+    showErr("Could not load data. Check the URLs or your internet connection.");
     console.error(e);
   }
   btn.innerHTML="View My Statement";btn.disabled=false;
 }
 
-function buildGPFUrl(itURL){
-  // Try to swap gid param to load GPF sheet
-  // Google Sheets publish URL format: …/pub?gid=XXXXXXX&single=true&output=csv
-  // GPF sheet gid needs to be known — for now return modified URL
-  // User can also hardcode GPF_SHEET_URL at top
-  if(GPF_SHEET_URL) return GPF_SHEET_URL;
-  // Attempt: replace gid value or append different sheet indicator
-  return itURL.replace(/gid=\d+/,"gid=GPF_GID_HERE");
-}
+
 
 function showErr(msg){
   const e=document.getElementById("err");
@@ -496,7 +525,9 @@ function logout(){
   document.getElementById("dash-page").style.display="none";
   document.getElementById("login-page").style.display="flex";
   document.getElementById("pan").value="";
-  document.getElementById("dob").value="";
+  document.getElementById("dob-dd").value="";
+  document.getElementById("dob-mm").value="";
+  document.getElementById("dob-yyyy").value="";
   document.getElementById("err").style.display="none";
 }
 
@@ -780,9 +811,31 @@ function loadRequests(){
 // SHOW/HIDE URL FIELD based on hardcoded URL
 // ══════════════════════════════════════════════════════
 window.onload=()=>{
-  if(IT_SHEET_URL) document.getElementById("url-field").style.display="none";
+  // Pre-fill saved URLs into input fields
+  const savedIT  = localStorage.getItem("portal_url_it");
+  const savedGPF = localStorage.getItem("portal_url_gpf");
+
+  if(savedIT  && document.getElementById("url-it"))  document.getElementById("url-it").value  = savedIT;
+  if(savedGPF && document.getElementById("url-gpf")) document.getElementById("url-gpf").value = savedGPF;
+
+  // Hide URL config section if both URLs already saved (or hardcoded)
+  const urlSection = document.getElementById("url-config-section");
+  if(urlSection){
+    const bothSaved = (IT_SHEET_URL || savedIT) && (GPF_SHEET_URL || savedGPF);
+    if(bothSaved) urlSection.style.display = "none";
+  }
+
+  // Allow Enter key to login
   document.addEventListener("keydown",e=>{
     if(e.key==="Enter"&&document.getElementById("login-page").style.display!=="none")doLogin();
+  });
+
+  // Tab between DOB fields on Enter too
+  document.getElementById("dob-dd").addEventListener("keydown",e=>{
+    if(e.key==="Enter") document.getElementById("dob-mm").focus();
+  });
+  document.getElementById("dob-mm").addEventListener("keydown",e=>{
+    if(e.key==="Enter") document.getElementById("dob-yyyy").focus();
   });
 };
 </script>
